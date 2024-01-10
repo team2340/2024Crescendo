@@ -7,7 +7,7 @@ package frc.robot;
 import edu.wpi.first.util.sendable.SendableRegistry;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.motorcontrol.PWMSparkMax;
 
@@ -22,7 +22,7 @@ public class Robot extends TimedRobot {
   private final PWMSparkMax m_rightDrive = new PWMSparkMax(1);
   private final DifferentialDrive m_robotDrive =
       new DifferentialDrive(m_leftDrive::set, m_rightDrive::set);
-  private final XboxController m_controller = new XboxController(0);
+  private final Joystick m_controller = new Joystick(0);
   private final Timer m_timer = new Timer();
 
   public Robot() {
@@ -67,7 +67,9 @@ public class Robot extends TimedRobot {
   /** This function is called periodically during teleoperated mode. */
   @Override
   public void teleopPeriodic() {
-    m_robotDrive.arcadeDrive(-m_controller.getLeftY(), -m_controller.getRightX());
+    m_robotDrive.arcadeDrive(-m_controller.getX(), -m_controller.getY());
+    System.out.println(m_controller.getY());
+    System.out.println(m_controller.getX());
   }
 
   /** This function is called once each time the robot enters test mode. */
