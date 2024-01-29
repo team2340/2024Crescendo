@@ -10,8 +10,11 @@ import org.photonvision.targeting.PhotonTrackedTarget;
 
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.filter.SlewRateLimiter;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Joystick;
 
@@ -21,9 +24,11 @@ public class Drivetrain extends SubsystemBase{
     private final WPI_TalonSRX leftRear = new WPI_TalonSRX(Constants.DRIVETRAIN_LEFT_REAR_MOTOR);
     private final WPI_TalonSRX rightFront = new WPI_TalonSRX(Constants.DRIVETRAIN_RIGHT_FRONT_MOTOR);
     private final WPI_TalonSRX rightRear = new WPI_TalonSRX(Constants.DRIVETRAIN_RIGHT_REAR_MOTOR);
-    private final PhotonCamera camera = new PhotonCamera("Microsoft_LifeCam_HD-3000");
-    private final PIDController controller = new PIDController(0.1,0,0.0);
-    private final PIDController turnController = new PIDController(0.1,0,0.0);
+    private final PhotonCamera camera = new PhotonCamera("Arducam_OV9281_USB_Camera");
+    
+    private final PIDController controller = new PIDController(3,0.0,0.5);
+
+    private final PIDController turnController = new PIDController(0.04,0.00,0.01);
     
 
     private final DifferentialDrive robotDrive;
@@ -35,7 +40,7 @@ public class Drivetrain extends SubsystemBase{
 
     public Drivetrain(Joystick joystick) {
         this.joystick = joystick;
-
+        controller.setTolerance(0.1,10);
         leftFront.setInverted(false);
         leftRear.setInverted(false);
         rightFront.setInverted(true);
@@ -55,39 +60,37 @@ public class Drivetrain extends SubsystemBase{
 
         factor = (joystick.getTwist()-1)/2; 
         factor= (factor*-1);
-        forwardValue=joystick.getY() * factor;
-        rotationValue=joystick.getX() * factor;
+        forwardValue= forwardBackwardLimiter.calculate(joystick.getY()*factor);
+        rotationValue=  rotationLimiter.calculate(joystick.getX()*factor);
 
          var result = camera.getLatestResult();
 
-         PhotonTrackedTarget target = result.getBestTarget();
-        if(target != null && joystick.getRawButton(2)){
+        if(result.hasTargets()){
         
-            double range =
-            PhotonUtils.calculateDistanceToTargetMeters(
-                0.2,
-                1,0,
+             PhotonTrackedTarget target = result.getBestTarget();
+        
+            double range = PhotonUtils.calculateDistanceToTargetMeters(
+                0.177,
+                1.029,
+                0,
                 Units.degreesToRadians(result.getBestTarget().getPitch()));
-            System.out.println(range);
-           // forwardValue= controller.calculate(range,-10.169);
-            rotationValue = -turnController.calculate(result.getBestTarget().getYaw(), 0);
+
+            Translation2d translation = PhotonUtils.estimateCameraToTargetTranslation(range,Rotation2d.fromDegrees(-target.getYaw()));
+            System.out.println(translation.getNorm());
+           
+            if (joystick.getRawButton(2)){
+                forwardValue = controller.calculate(range,4.0);
+               
+                forwardValue= MathUtil.clamp(forwardValue,-0.6,0.6);
+
+            }
+            if (joystick.getRawButton(5)){
+                rotationValue = -turnController.calculate(result.getBestTarget().getYaw(), 0);
+                 rotationValue= MathUtil.clamp(rotationValue,-0.6,0.6);
+            }
         }
 
-        robotDrive.arcadeDrive(
-            forwardBackwardLimiter.calculate(-forwardValue), 
-            rotationLimiter.calculate(-rotationValue)
-        );
+        robotDrive.arcadeDrive(-forwardValue, -rotationValue );
     }
 
-    private void driveLeft(double speed) {
-        leftFront.set(speed);
-        leftRear.set(speed);
-        System.out.println(speed);
-    }
-
-    private void driveRight(double speed) {
-        rightFront.set(speed);
-        rightRear.set(speed);
-        System.out.println(speed);
-    }
 }
