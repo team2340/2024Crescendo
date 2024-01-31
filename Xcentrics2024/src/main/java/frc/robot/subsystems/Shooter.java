@@ -5,18 +5,17 @@ import com.revrobotics.CANSparkMax;
 
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants;
 
 public class Shooter extends SubsystemBase{
     private boolean isShooting = false;
 
-    private final Joystick joystick;
-    private CANSparkMax shooterMotor1 = new CANSparkMax(57,MotorType.kBrushless);
-    private CANSparkMax shooterMotor2 = new CANSparkMax(56,MotorType.kBrushless);
-    private CANSparkMax feedMotor1 = new CANSparkMax(55,MotorType.kBrushless);
-    private CANSparkMax feedMotor2 = new CANSparkMax(58,MotorType.kBrushless);
+    private CANSparkMax shooterMotor1 = new CANSparkMax(Constants.SHOOTER_MOTOR_CONTROLLER_1_CAN_ID,MotorType.kBrushless);
+    private CANSparkMax shooterMotor2 = new CANSparkMax(Constants.SHOOTER_MOTOR_CONTROLLER_2_CAN_ID,MotorType.kBrushless);
+    private CANSparkMax feedMotor1 = new CANSparkMax(Constants.FEED_MOTOR_CONTROLLER_1_CAN_ID,MotorType.kBrushless);
+    private CANSparkMax feedMotor2 = new CANSparkMax(Constants.FEED_MOTOR_CONTROLLER_2_CAN_ID,MotorType.kBrushless);
 
-    public Shooter(Joystick joystick) {
-        this.joystick = joystick;
+    public Shooter() {
         feedMotor1.setInverted(true);
         shooterMotor1.setInverted(true);
         shooterMotor2.setInverted(false);
@@ -46,10 +45,10 @@ public class Shooter extends SubsystemBase{
 
     public void ingest() {
         System.out.println("Ingesting");
-        shooterMotor1.set(-0.1);
-        shooterMotor2.set(-0.1);
-        feedMotor1.set(-0.1);
-        feedMotor2.set(-0.1);
+        shooterMotor1.set(Constants.FEED_SPEED_SHOOTER_MOTOR);
+        shooterMotor2.set(Constants.FEED_SPEED_SHOOTER_MOTOR);
+        feedMotor1.set(Constants.FEED_SPEED_FEEDER_MOTOR);
+        feedMotor2.set(Constants.FEED_SPEED_FEEDER_MOTOR);
     }
 
     public boolean isShooting() {

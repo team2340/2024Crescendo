@@ -1,6 +1,7 @@
 package frc.robot.subsystems;
 
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
@@ -13,8 +14,7 @@ import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.filter.SlewRateLimiter;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
+
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Joystick;
 
@@ -26,11 +26,17 @@ public class Drivetrain extends SubsystemBase{
     private final WPI_TalonSRX rightRear = new WPI_TalonSRX(Constants.DRIVETRAIN_RIGHT_REAR_MOTOR);
     private final PhotonCamera camera = new PhotonCamera("Arducam_OV9281_USB_Camera");
     
-    private final PIDController controller = new PIDController(3,0.0,0.5);
+    private final PIDController controller = new PIDController(
+        Constants.FORWARD_REVERSE_CONTROLLER_P,
+        Constants.FORWARD_REVERSE_CONTROLLER_I,
+        Constants.FORWARD_REVERSE_CONTROLLER_D);
 
-    private final PIDController turnController = new PIDController(0.04,0.00,0.01);
+    private final PIDController turnController = new PIDController(
+        Constants.TURN_CONTROLLER_P,
+        Constants.TURN_CONTROLLER_I,
+        Constants.TURN_CONTROLLER_D
+    );
     
-
     private final DifferentialDrive robotDrive;
     private final Joystick joystick;
 
@@ -63,30 +69,30 @@ public class Drivetrain extends SubsystemBase{
         forwardValue= forwardBackwardLimiter.calculate(joystick.getY()*factor);
         rotationValue=  rotationLimiter.calculate(joystick.getX()*factor);
 
-         var result = camera.getLatestResult();
+        var result = camera.getLatestResult();
 
+        SmartDashboard.putBoolean("AprilTagFound", result.hasTargets());
         if(result.hasTargets()){
         
-             PhotonTrackedTarget target = result.getBestTarget();
+            PhotonTrackedTarget target = result.getBestTarget();
         
             double range = PhotonUtils.calculateDistanceToTargetMeters(
                 0.177,
                 1.029,
                 0,
-                Units.degreesToRadians(result.getBestTarget().getPitch()));
-
-            Translation2d translation = PhotonUtils.estimateCameraToTargetTranslation(range,Rotation2d.fromDegrees(-target.getYaw()));
-            System.out.println(translation.getNorm());
-           
+                Units.degreesToRadians(target.getPitch()));
+            
+            SmartDashboard.putNumber("AprilTagDistance", range);
+            
             if (joystick.getRawButton(2)){
                 forwardValue = controller.calculate(range,4.0);
                
-                forwardValue= MathUtil.clamp(forwardValue,-0.6,0.6);
+                forwardValue= MathUtil.clamp(forwardValue,-Constants.AUTO_TARGET_DRIVE_SPEED, Constants.AUTO_TARGET_DRIVE_SPEED);
 
             }
             if (joystick.getRawButton(5)){
                 rotationValue = -turnController.calculate(result.getBestTarget().getYaw(), 0);
-                 rotationValue= MathUtil.clamp(rotationValue,-0.6,0.6);
+                 rotationValue= MathUtil.clamp(rotationValue,-Constants.AUTO_TARGET_DRIVE_SPEED,Constants.AUTO_TARGET_DRIVE_SPEED);
             }
         }
 
