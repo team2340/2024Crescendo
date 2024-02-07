@@ -3,6 +3,7 @@ package frc.robot;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RepeatCommand;
+import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.POVButton;
 import frc.robot.commands.Shoot;
 import frc.robot.subsystems.*;
@@ -34,8 +35,15 @@ public class RobotContainer {
             .onTrue( shootCommand )
             .onFalse(new InstantCommand( () -> shooter.stopShooter() ) );
 
-
+        new JoystickButton(joystick, 6)
+        .onTrue( new InstantCommand( () -> shooter.moveForward()))
+        .onFalse(new InstantCommand( () -> shooter.stopShooter()));
+        
+        new JoystickButton(joystick, 4)
+        .onTrue( new InstantCommand( () -> shooter.feedAmplifier()))
+        .onFalse(new InstantCommand( () -> shooter.stopShooter()));
     }
+
 
     public static RobotContainer getInstance(){
 		return instance;

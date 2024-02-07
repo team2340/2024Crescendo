@@ -46,17 +46,20 @@ public class Drivetrain extends SubsystemBase{
 
     public Drivetrain(Joystick joystick) {
         this.joystick = joystick;
-        controller.setTolerance(0.1,10);
-        leftFront.setInverted(false);
-        leftRear.setInverted(false);
-        rightFront.setInverted(true);
-        rightRear.setInverted(true);
+        controller.setTolerance(0.05,20);
+        leftFront.setInverted(true);
+        leftRear.setInverted(true);
+        rightFront.setInverted(false);
+        rightRear.setInverted(false);
 
         leftRear.follow(leftFront);
         rightRear.follow(rightFront);
 
         robotDrive = new DifferentialDrive(leftFront, rightFront);
         robotDrive.setSafetyEnabled(true);
+
+        SmartDashboard.putBoolean("AprilTagFound", false);
+        SmartDashboard.putNumber("AprilTagDistance", 0);
     }
 
     public void drive(){
@@ -67,32 +70,34 @@ public class Drivetrain extends SubsystemBase{
         factor = (joystick.getTwist()-1)/2; 
         factor= (factor*-1);
         forwardValue= forwardBackwardLimiter.calculate(joystick.getY()*factor);
-        rotationValue=  rotationLimiter.calculate(joystick.getX()*factor);
+        rotationValue=  -rotationLimiter.calculate(joystick.getX()*factor);
 
         var result = camera.getLatestResult();
 
         SmartDashboard.putBoolean("AprilTagFound", result.hasTargets());
         if(result.hasTargets()){
-        
             PhotonTrackedTarget target = result.getBestTarget();
-        
             double range = PhotonUtils.calculateDistanceToTargetMeters(
-                0.177,
+                Constants.CAMERA_HEIGHT_METERS,
                 1.029,
-                0,
+                Constants.CAMERA_PITCH_RADIANS,
                 Units.degreesToRadians(target.getPitch()));
             
             SmartDashboard.putNumber("AprilTagDistance", range);
             
-            if (joystick.getRawButton(2)){
-                forwardValue = controller.calculate(range,4.0);
-               
-                forwardValue= MathUtil.clamp(forwardValue,-Constants.AUTO_TARGET_DRIVE_SPEED, Constants.AUTO_TARGET_DRIVE_SPEED);
 
-            }
-            if (joystick.getRawButton(5)){
-                rotationValue = -turnController.calculate(result.getBestTarget().getYaw(), 0);
-                 rotationValue= MathUtil.clamp(rotationValue,-Constants.AUTO_TARGET_DRIVE_SPEED,Constants.AUTO_TARGET_DRIVE_SPEED);
+            int targetId = target.getFiducialId();
+            if( Constants.targetDistanceMap.containsKey( targetId) ) {
+                double desiredRange = Constants.targetDistanceMap.get(targetId)[0];
+                double desiredYaw = Constants.targetDistanceMap.get(targetId)[0];
+
+                if (joystick.getRawButton(2)){
+                    forwardValue = controller.calculate(range, desiredRange);
+                    forwardValue= MathUtil.clamp(forwardValue,-Constants.AUTO_TARGET_DRIVE_SPEED, Constants.AUTO_TARGET_DRIVE_SPEED);
+
+                    rotationValue = turnController.calculate(result.getBestTarget().getYaw(), desiredYaw);
+                    rotationValue= MathUtil.clamp(rotationValue,-Constants.AUTO_TARGET_DRIVE_SPEED,Constants.AUTO_TARGET_DRIVE_SPEED);
+                }
             }
         }
 

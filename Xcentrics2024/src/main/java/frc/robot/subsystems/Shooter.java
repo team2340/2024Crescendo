@@ -21,6 +21,21 @@ public class Shooter extends SubsystemBase{
         shooterMotor2.setInverted(false);
     }
 
+    public void moveForward() {
+        shooterMotor1.set(0.1);
+        shooterMotor2.set(0.1);
+        feedMotor1.set(1);
+        feedMotor2.set(1);
+        isShooting = true;
+    }
+    public void feedAmplifier() {
+        shooterMotor1.set(-0.3);
+        shooterMotor2.set(-0.3);
+        feedMotor1.set(-1);
+        feedMotor2.set(-1);
+        isShooting = true;
+    }
+
     public void startShooter() {
         System.out.println("Starting shooter");
         shooterMotor1.set(1);
