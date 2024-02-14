@@ -11,10 +11,11 @@ public class Constants {
     public static int DRIVER_JOYSTICK_PORT = 0;
 
     // Output pins for the drivetrain
-    public static int DRIVETRAIN_LEFT_FRONT_MOTOR = 5;
-    public static int DRIVETRAIN_LEFT_REAR_MOTOR = 3;
-    public static int DRIVETRAIN_RIGHT_FRONT_MOTOR = 4;
-    public static int DRIVETRAIN_RIGHT_REAR_MOTOR = 2;
+    public static int DRIVETRAIN_LEFT_FRONT_MOTOR = 11;
+    public static int DRIVETRAIN_LEFT_REAR_MOTOR = 13;
+    public static int DRIVETRAIN_RIGHT_FRONT_MOTOR = 10;
+    public static int DRIVETRAIN_RIGHT_REAR_MOTOR = 12;
+    
 
     // "Soft start" rates for forward/backwards, and also rotation
     public static double FORWARD_BACKWARD_SLEW_RATE = 3;
@@ -39,7 +40,7 @@ public class Constants {
     public static Map<Integer, Double[]> targetDistanceMap = new HashMap<>();
     static
     {
-        targetDistanceMap.put(1, new Double[]{ 1.1, 0.0 });
+        targetDistanceMap.put(1, new Double[]{ .934, 0.0 });
     }
 
     // Auto Targeting Variables //
@@ -65,5 +66,15 @@ public class Constants {
     public static int FEED_MOTOR_CONTROLLER_2_CAN_ID = 58;
     
     /**** SHOOTER RELATED VARIABLES ****/
+
+
+    /**** CLIMBER RELATED VARIABLES ****/
+    public static int CLIMBER_MOTOR_LEFT_CAN_ID = 5;
+    public static int CLIMBER_MOTOR_RIGHT_CAN_ID = 6;
+
+    public static int CLIMBER_UPPER_LIMIT_DIO_PIN = 1;
+    public static int CLIMBER_LOWER_LIMIT_DIO_PIN = 2;
+
+    /**** CLIMBER RELATED VARIABLES ****/
 
 }

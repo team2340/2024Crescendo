@@ -9,6 +9,7 @@ import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonUtils;
 import org.photonvision.targeting.PhotonTrackedTarget;
 
+import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 
 import edu.wpi.first.math.MathUtil;
@@ -47,10 +48,15 @@ public class Drivetrain extends SubsystemBase{
     public Drivetrain(Joystick joystick) {
         this.joystick = joystick;
         controller.setTolerance(0.05,20);
-        leftFront.setInverted(true);
-        leftRear.setInverted(true);
-        rightFront.setInverted(false);
-        rightRear.setInverted(false);
+        leftFront.setInverted(false);
+        leftRear.setInverted(false);
+        rightFront.setInverted(true);
+        rightRear.setInverted(true);
+
+        //leftFront.setNeutralMode(NeutralMode.Coast);
+        //leftRear.setNeutralMode(NeutralMode.Coast);
+        //rightFront.setNeutralMode(NeutralMode.Coast);
+        //rightRear.setNeutralMode(NeutralMode.Coast);
 
         leftRear.follow(leftFront);
         rightRear.follow(rightFront);
@@ -69,8 +75,8 @@ public class Drivetrain extends SubsystemBase{
 
         factor = (joystick.getTwist()-1)/2; 
         factor= (factor*-1);
-        forwardValue= forwardBackwardLimiter.calculate(joystick.getY()*factor);
-        rotationValue=  -rotationLimiter.calculate(joystick.getX()*factor);
+        forwardValue = forwardBackwardLimiter.calculate(joystick.getY()*factor);
+        rotationValue = rotationLimiter.calculate(joystick.getX()*factor);
 
         var result = camera.getLatestResult();
 
@@ -95,7 +101,7 @@ public class Drivetrain extends SubsystemBase{
                     forwardValue = controller.calculate(range, desiredRange);
                     forwardValue= MathUtil.clamp(forwardValue,-Constants.AUTO_TARGET_DRIVE_SPEED, Constants.AUTO_TARGET_DRIVE_SPEED);
 
-                    rotationValue = turnController.calculate(result.getBestTarget().getYaw(), desiredYaw);
+                    rotationValue = -turnController.calculate(result.getBestTarget().getYaw(), desiredYaw);
                     rotationValue= MathUtil.clamp(rotationValue,-Constants.AUTO_TARGET_DRIVE_SPEED,Constants.AUTO_TARGET_DRIVE_SPEED);
                 }
             }

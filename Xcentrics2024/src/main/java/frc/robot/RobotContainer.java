@@ -12,9 +12,10 @@ import frc.robot.subsystems.*;
 public class RobotContainer {
     
     private static RobotContainer instance;
-    private final Joystick joystick = new Joystick(Constants.DRIVER_JOYSTICK_PORT);
-    private final Drivetrain drivetrain = new Drivetrain(joystick);
+    private final Joystick driverJoyStick = new Joystick(Constants.DRIVER_JOYSTICK_PORT);
+    private final Drivetrain drivetrain = new Drivetrain(driverJoyStick);
     private final Shooter shooter = new Shooter();
+    private final Climber climber = new Climber();
 
     private final Shoot shootCommand = new Shoot(shooter);
 
@@ -27,21 +28,40 @@ public class RobotContainer {
             )
         );
 
-        new POVButton(joystick, 180)
+        
+        // Button to make it so the shooter sucks in a ring
+        new POVButton(driverJoyStick, 180)
             .onTrue( new InstantCommand( () -> shooter.ingest() ) )
             .onFalse( new InstantCommand( () -> shooter.stopShooter() ) );
 
-        new POVButton(joystick, 0)
+
+        // Button to run the shoot command
+        new POVButton(driverJoyStick, 0)
             .onTrue( shootCommand )
             .onFalse(new InstantCommand( () -> shooter.stopShooter() ) );
 
-        new JoystickButton(joystick, 6)
+
+        // Button to "center" the ring in the shooter
+        new JoystickButton(driverJoyStick, 6)
         .onTrue( new InstantCommand( () -> shooter.moveForward()))
         .onFalse(new InstantCommand( () -> shooter.stopShooter()));
         
-        new JoystickButton(joystick, 4)
+
+        // Button to feed the ring into the amplifier
+        new JoystickButton(driverJoyStick, 4)
         .onTrue( new InstantCommand( () -> shooter.feedAmplifier()))
         .onFalse(new InstantCommand( () -> shooter.stopShooter()));
+
+
+        new JoystickButton(driverJoyStick, 5)
+        .onTrue( new InstantCommand( () -> climber.goDown()))
+        .onFalse(new InstantCommand( () -> climber.stopClimber()));
+
+
+        new JoystickButton(driverJoyStick, 3)
+        .onTrue( new InstantCommand( () -> climber.goUp()))
+        .onFalse(new InstantCommand( () -> climber.stopClimber()));
+
     }
 
 
