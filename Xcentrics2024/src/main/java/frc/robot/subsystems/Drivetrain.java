@@ -4,6 +4,7 @@ import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import frc.robot.Robot;
 
 import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonUtils;
@@ -69,17 +70,70 @@ public class Drivetrain extends SubsystemBase{
     }
 
     public void drive(){
-        double forwardValue = 0.0;
-        double rotationValue = 0.0;
-        double factor = 0.0; 
+        if(Robot.getInstance().isTeleop()){
+            double forwardValue = 0.0;
+            double rotationValue = 0.0;
+            double factor = 0.0; 
 
-        factor = (joystick.getTwist()-1)/2; 
-        factor= (factor*-1);
-        forwardValue = forwardBackwardLimiter.calculate(joystick.getY()*factor);
-        rotationValue = rotationLimiter.calculate(joystick.getX()*factor);
+            factor = (joystick.getTwist()-1)/2; 
+            factor= (factor*-1);
+            forwardValue = forwardBackwardLimiter.calculate(joystick.getY()*factor);
+            rotationValue = rotationLimiter.calculate(joystick.getX()*factor);
+
+            var result = camera.getLatestResult();
+            SmartDashboard.putBoolean("AprilTagFound", result.hasTargets());
+            if(result.hasTargets()){
+                PhotonTrackedTarget target = result.getBestTarget();
+                double range = PhotonUtils.calculateDistanceToTargetMeters(
+                    Constants.CAMERA_HEIGHT_METERS,
+                    1.029,
+                    Constants.CAMERA_PITCH_RADIANS,
+                    Units.degreesToRadians(target.getPitch()));
+                
+                SmartDashboard.putNumber("AprilTagDistance", range);
+                
+
+                int targetId = target.getFiducialId();
+                if( Constants.targetDistanceMap.containsKey( targetId) ) {
+                    double desiredRange = Constants.targetDistanceMap.get(targetId)[0];
+                    double desiredYaw = Constants.targetDistanceMap.get(targetId)[0];
+
+                    if (joystick.getRawButton(2)){
+                        forwardValue = controller.calculate(range, desiredRange);
+                        forwardValue= MathUtil.clamp(forwardValue,-Constants.AUTO_TARGET_DRIVE_SPEED, Constants.AUTO_TARGET_DRIVE_SPEED);
+
+                        rotationValue = -turnController.calculate(result.getBestTarget().getYaw(), desiredYaw);
+                        rotationValue= MathUtil.clamp(rotationValue,-Constants.AUTO_TARGET_DRIVE_SPEED,Constants.AUTO_TARGET_DRIVE_SPEED);
+                    }
+                }
+            }
+
+            drive(forwardValue, rotationValue);
+        }
+        
+    }
+
+    public boolean hasTarget(Integer ... targetIDs) {
+        var result = camera.getLatestResult();
+        for( Integer targetID : targetIDs )
+        {
+            if( result != null && result.getTargets() != null )
+            {
+                return result.getTargets().stream().anyMatch(c -> { return c.getFiducialId() == targetID; });
+            }
+        }
+
+        return false;
+
+    }
+
+    public void driveToTarget(int targetId) {
+        if( hasTarget(targetId) == false )
+        {
+            return;
+        }
 
         var result = camera.getLatestResult();
-
         SmartDashboard.putBoolean("AprilTagFound", result.hasTargets());
         if(result.hasTargets()){
             PhotonTrackedTarget target = result.getBestTarget();
@@ -91,23 +145,59 @@ public class Drivetrain extends SubsystemBase{
             
             SmartDashboard.putNumber("AprilTagDistance", range);
             
-
-            int targetId = target.getFiducialId();
             if( Constants.targetDistanceMap.containsKey( targetId) ) {
                 double desiredRange = Constants.targetDistanceMap.get(targetId)[0];
                 double desiredYaw = Constants.targetDistanceMap.get(targetId)[0];
 
-                if (joystick.getRawButton(2)){
-                    forwardValue = controller.calculate(range, desiredRange);
-                    forwardValue= MathUtil.clamp(forwardValue,-Constants.AUTO_TARGET_DRIVE_SPEED, Constants.AUTO_TARGET_DRIVE_SPEED);
+                double forwardValue = controller.calculate(range, desiredRange);
+                forwardValue= MathUtil.clamp(forwardValue,-Constants.AUTO_TARGET_DRIVE_SPEED, Constants.AUTO_TARGET_DRIVE_SPEED);
 
-                    rotationValue = -turnController.calculate(result.getBestTarget().getYaw(), desiredYaw);
-                    rotationValue= MathUtil.clamp(rotationValue,-Constants.AUTO_TARGET_DRIVE_SPEED,Constants.AUTO_TARGET_DRIVE_SPEED);
+                double rotationValue = -turnController.calculate(result.getBestTarget().getYaw(), desiredYaw);
+                rotationValue= MathUtil.clamp(rotationValue,-Constants.AUTO_TARGET_DRIVE_SPEED,Constants.AUTO_TARGET_DRIVE_SPEED);
+
+                drive(forwardValue, rotationValue);
+            }
+        }
+    }
+
+    public boolean isAtTarget(int targetId) {
+        double targetThreshold = 0.2;
+
+        var result = camera.getLatestResult();
+        SmartDashboard.putBoolean("AprilTagFound", result.hasTargets());
+        if(result.hasTargets()){
+            PhotonTrackedTarget target = result.getBestTarget();
+            double range = PhotonUtils.calculateDistanceToTargetMeters(
+                Constants.CAMERA_HEIGHT_METERS,
+                1.029,
+                Constants.CAMERA_PITCH_RADIANS,
+                Units.degreesToRadians(target.getPitch()));
+            
+            SmartDashboard.putNumber("AprilTagDistance", range);
+            
+            if( Constants.targetDistanceMap.containsKey( targetId) ) {
+                double desiredRange = Constants.targetDistanceMap.get(targetId)[0];
+                double desiredYaw = Constants.targetDistanceMap.get(targetId)[0];
+
+                double forwardValue = controller.calculate(range, desiredRange);
+                forwardValue= MathUtil.clamp(forwardValue,-Constants.AUTO_TARGET_DRIVE_SPEED, Constants.AUTO_TARGET_DRIVE_SPEED);
+
+                double rotationValue = -turnController.calculate(result.getBestTarget().getYaw(), desiredYaw);
+                rotationValue= MathUtil.clamp(rotationValue,-Constants.AUTO_TARGET_DRIVE_SPEED,Constants.AUTO_TARGET_DRIVE_SPEED);
+
+                if(forwardValue < targetThreshold && forwardValue > -targetThreshold && rotationValue < targetThreshold && rotationValue > -targetThreshold) {
+                    return true;
                 }
             }
         }
 
-        robotDrive.arcadeDrive(-forwardValue, -rotationValue );
+        return false;
     }
+
+    public void drive(double forwardValue, double rotationValue){
+
+         robotDrive.arcadeDrive(-forwardValue, -rotationValue );
+    
+}
 
 }

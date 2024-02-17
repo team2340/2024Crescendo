@@ -4,6 +4,7 @@
 
 package frc.robot;
 
+import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.Timer;   
 
@@ -19,13 +20,16 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
  */
 public class Robot extends TimedRobot {
   private RobotContainer robotContainer;
-
+  private static Robot instance;
   private final Timer m_timer = new Timer();
 
   public Robot() {
-
+    instance = this;
   }
+  public static Robot getInstance(){
 
+    return instance;
+  }
   /**
    * This function is run when the robot is first started up and should be used for any
    * initialization code.
@@ -44,9 +48,10 @@ public class Robot extends TimedRobot {
   @Override
   public void autonomousInit() {
     m_timer.restart();
+    robotContainer.getAutonomousCommand().schedule();
   }
 
-  /** This function is called periodically during autonomous. */
+ /** This function is called periodically during autonomous. */
   @Override
   public void autonomousPeriodic() {
 
