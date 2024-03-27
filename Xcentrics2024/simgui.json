@@ -1,50 +1,164 @@
 {
   "HALProvider": {
     "Other Devices": {
-      "SPARK MAX [55]": {
+      "DutyCycleEncoder[0]": {
         "header": {
           "open": true
         }
       },
-      "SPARK MAX [56]": {
+      "REV Color Sensor V3[0,82]": {
         "header": {
           "open": true
         }
       },
-      "SPARK MAX [58]": {
+      "Talon SRX[10]": {
+        "header": {
+          "open": true
+        }
+      },
+      "Talon SRX[11]": {
+        "header": {
+          "open": true
+        }
+      },
+      "Talon SRX[5]": {
+        "header": {
+          "open": true
+        }
+      },
+      "Talon SRX[6]": {
+        "header": {
+          "open": true
+        }
+      },
+      "Talon SRX[8]": {
         "header": {
           "open": true
         }
       }
     },
-    "PWM Outputs": {
-      "window": {
-        "visible": true
+    "RoboRIO": {
+      "5V Rail": {
+        "open": true
       }
     }
   },
   "NTProvider": {
     "types": {
-      "/FMSInfo": "FMSInfo"
+      "/FMSInfo": "FMSInfo",
+      "/SmartDashboard/Auto Drive Forward PID Controller": "PIDController",
+      "/SmartDashboard/Auto Drive Rotation PID Controller": "PIDController",
+      "/SmartDashboard/Autonomous Chooser": "String Chooser",
+      "/SmartDashboard/Field": "Field2d",
+      "/SmartDashboard/Note Ingest Operation Mode": "String Chooser",
+      "/SmartDashboard/SendableChooser[0]": "String Chooser",
+      "/SmartDashboard/Shooter Angle Operation Mode": "String Chooser",
+      "/SmartDashboard/Shooter Angle PID Controller": "PIDController",
+      "/SmartDashboard/Shooter Angle Setpoint": "String Chooser",
+      "/SmartDashboard/VisionSystemSim-Arducam_OV9281_USB_Camera/Sim Field": "Field2d",
+      "/SmartDashboard/VisionSystemSim-main/Sim Field": "Field2d"
+    },
+    "windows": {
+      "/SmartDashboard/Auto Drive Forward PID Controller": {
+        "window": {
+          "visible": true
+        }
+      },
+      "/SmartDashboard/Field": {
+        "bottom": 1476,
+        "height": 8.210550308227539,
+        "left": 150,
+        "right": 2961,
+        "top": 79,
+        "width": 16.541748046875,
+        "window": {
+          "visible": true
+        }
+      },
+      "/SmartDashboard/Note Ingest Operation Mode": {
+        "window": {
+          "visible": true
+        }
+      },
+      "/SmartDashboard/Shooter Angle Operation Mode": {
+        "window": {
+          "visible": true
+        }
+      },
+      "/SmartDashboard/VisionSystemSim-main/Sim Field": {
+        "bottom": 1476,
+        "height": 8.210550308227539,
+        "left": 150,
+        "right": 2961,
+        "top": 79,
+        "width": 16.541748046875,
+        "window": {
+          "visible": true
+        }
+      }
     }
   },
   "NetworkTables": {
     "transitory": {
       "Shuffleboard": {
         "open": true
+      },
+      "SmartDashboard": {
+        "Field": {
+          "double[]##v_/SmartDashboard/Field/Robot": {
+            "open": true
+          }
+        },
+        "Note Ingest Operation Mode": {
+          "string[]##v_/SmartDashboard/Note Ingest Operation Mode/options": {
+            "open": true
+          }
+        },
+        "VisionSystemSim-Arducam_OV9281_USB_Camera": {
+          "Sim Field": {
+            "open": true
+          }
+        },
+        "open": true
       }
     }
   },
   "NetworkTables Info": {
-    "Connections": {
+    "Clients": {
       "open": true
     },
     "Server": {
-      "Publishers": {
+      "Subscribers": {
         "open": true
       },
       "open": true
     },
     "visible": true
+  },
+  "Plot": {
+    "Plot <0>": {
+      "plots": [
+        {
+          "backgroundColor": [
+            0.0,
+            0.0,
+            0.0,
+            0.8500000238418579
+          ],
+          "height": 338,
+          "series": [
+            {
+              "color": [
+                0.2980392277240753,
+                0.44705885648727417,
+                0.6901960968971252,
+                1.0
+              ],
+              "id": "NT:/SmartDashboard/ColorSensorProximity"
+            }
+          ]
+        }
+      ]
+    }
   }
 }

@@ -4,12 +4,9 @@
 
 package frc.robot;
 
-import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.TimedRobot;
-import edu.wpi.first.wpilibj.Timer;   
-
-
-
+import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 
 /**
@@ -48,7 +45,12 @@ public class Robot extends TimedRobot {
   @Override
   public void autonomousInit() {
     m_timer.restart();
-    robotContainer.getAutonomousCommand().schedule();
+    Command autonomousCommand = robotContainer.getAutonomousCommand();
+    if( autonomousCommand != null ) {
+      autonomousCommand.schedule();
+    }
+    
+    
   }
 
  /** This function is called periodically during autonomous. */

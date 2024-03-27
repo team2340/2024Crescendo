@@ -5,48 +5,86 @@ import com.revrobotics.ColorSensorV3.ColorSensorMeasurementRate;
 import com.revrobotics.ColorSensorV3.ColorSensorResolution;
 import com.revrobotics.ColorSensorV3.GainFactor;
 import com.revrobotics.CANSparkMax;
-import com.revrobotics.ColorMatch;
-import com.revrobotics.ColorMatchResult;
+
 import com.revrobotics.ColorSensorV3;
+import com.revrobotics.CANSparkBase.IdleMode;
+
 import edu.wpi.first.wpilibj.I2C;
-import edu.wpi.first.wpilibj.util.Color;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import frc.robot.RobotContainer;
+import frc.robot.subsystems.ShooterAngle.ANGLE;
+import frc.robot.utils.OperationMode;
 
 public class Shooter extends SubsystemBase{
+    private boolean isIntaking = false;
     private boolean isShooting = false;
+    private boolean noteSeen = false;
 
+
+    private final ShooterAngle shooterAngle;
     private CANSparkMax shooterMotor1 = new CANSparkMax(Constants.SHOOTER_MOTOR_CONTROLLER_1_CAN_ID,MotorType.kBrushless);
     private CANSparkMax shooterMotor2 = new CANSparkMax(Constants.SHOOTER_MOTOR_CONTROLLER_2_CAN_ID,MotorType.kBrushless);
     private CANSparkMax feedMotor1 = new CANSparkMax(Constants.FEED_MOTOR_CONTROLLER_1_CAN_ID,MotorType.kBrushless);
     private CANSparkMax feedMotor2 = new CANSparkMax(Constants.FEED_MOTOR_CONTROLLER_2_CAN_ID,MotorType.kBrushless);
 
     ColorSensorV3 colorSensorV3 = new ColorSensorV3(I2C.Port.kOnboard);
-    private final ColorMatch colorMatch = new ColorMatch();
-    private final Color WHITE = new Color(0.279,0.457,0.264);
-    private final Color ORANGE = new Color(0.413, 0.408, 0.176);
 
-    public Shooter() {
-        feedMotor1.setInverted(true);
-        shooterMotor1.setInverted(true);
-        shooterMotor2.setInverted(false);
+    public Shooter( ShooterAngle shooterAngle ) {
+        this.shooterAngle = shooterAngle;
+        SmartDashboard.putBoolean("Auto Reposition Note", true);
+        feedMotor1.setInverted(false);
+        feedMotor2.setInverted(true);
+        shooterMotor1.setInverted(false);
+        shooterMotor2.setInverted(true);
+
+        shooterMotor1.setOpenLoopRampRate(0.3);
+        shooterMotor2.setOpenLoopRampRate(0.3);
+
+        shooterMotor1.setClosedLoopRampRate(0.2);
+        shooterMotor2.setClosedLoopRampRate(0.2);
+
+        feedMotor1.setIdleMode(IdleMode.kBrake);
+        feedMotor2.setIdleMode(IdleMode.kBrake);
+        shooterMotor1.setIdleMode(IdleMode.kBrake);
+        shooterMotor2.setIdleMode(IdleMode.kBrake);
 
         colorSensorV3.configureColorSensor(
             ColorSensorResolution.kColorSensorRes20bit,
             ColorSensorMeasurementRate.kColorRate25ms,
             GainFactor.kGain18x);
-        colorMatch.addColorMatch(ORANGE); // Orange
-        colorMatch.addColorMatch(WHITE); // White
+
+        SmartDashboard.putString("ShooterFeederStatus", "Idle");
+        SmartDashboard.putString("ShooterShooterStatus", "Idle");
     }
 
-    public void moveForward() {
-        shooterMotor1.set(0.1);
-        shooterMotor2.set(0.1);
-        feedMotor1.set(1);
-        feedMotor2.set(1);
+    /*
+     * Move the note forward slowly
+     */
+    public void moveNoteForward() {
+        SmartDashboard.putString("ShooterFeederStatus", "Moving note forward");
+        feedMotor1.set(0.2);
+        feedMotor2.set(0.2);
         isShooting = true;
     }
+
+    /*
+     * Move the note rearward slowly
+     */
+    public void moveNoteRearward() {
+        SmartDashboard.putString("ShooterFeederStatus", "Moving note rearward");
+        feedMotor1.set(-0.2);
+        feedMotor2.set(-0.2);
+        isShooting = true;
+    }
+
+    /*
+     * Run the motors in reverse to feed the note into the amplifier
+     */
     public void feedAmplifier() {
+        SmartDashboard.putString("ShooterFeederStatus", "Reversing");
+        SmartDashboard.putString("ShooterShooterStatus", "Reversing");
         shooterMotor1.set(-0.3);
         shooterMotor2.set(-0.3);
         feedMotor1.set(-1);
@@ -54,53 +92,120 @@ public class Shooter extends SubsystemBase{
         isShooting = true;
     }
 
+    /*
+     * Start spinning the shooter motors to get ready to
+     * shoot the note
+     */
     public void startShooter() {
-        System.out.println("Starting shooter");
+        SmartDashboard.putString("ShooterShooterStatus", "Shooting");
         shooterMotor1.set(1);
         shooterMotor2.set(1);
         isShooting = true;
     }
 
+    /*
+     * Stops all the motors in the shooter
+     */
     public void stopShooter() {
-        System.out.println("Stopping shooter");
+        SmartDashboard.putString("ShooterFeederStatus", "Idle");
+        SmartDashboard.putString("ShooterShooterStatus", "Idle");
         shooterMotor1.set(0);
         shooterMotor2.set(0);
         feedMotor1.set(0);
         feedMotor2.set(0);
         isShooting = false;
+        isIntaking = false;
+
     }
 
-    public void feed() {
-        System.out.println("Feeding");
+    /*
+     * Stops the front shooter motors
+     */
+    public void stopShooterMotors() {
+        SmartDashboard.putString("ShooterShooterStatus", "Idle");
+        shooterMotor1.set(0);
+        shooterMotor2.set(0); 
+        isIntaking = false;
+    }
+
+    /*
+     * Start the feeder motors to send note forward into the shooter motors
+     */
+    public void feedToShoot() {
+        SmartDashboard.putString("ShooterFeederStatus", "Feeding to shoot");
         feedMotor1.set(1);
         feedMotor2.set(1);
     }
 
     public void ingest() {
-        System.out.println("Ingesting");
+        SmartDashboard.putString("ShooterFeederStatus", "Ingesting");
+        SmartDashboard.putString("ShooterShooterStatus", "Ingesting");
+
         shooterMotor1.set(Constants.FEED_SPEED_SHOOTER_MOTOR);
         shooterMotor2.set(Constants.FEED_SPEED_SHOOTER_MOTOR);
         feedMotor1.set(Constants.FEED_SPEED_FEEDER_MOTOR);
         feedMotor2.set(Constants.FEED_SPEED_FEEDER_MOTOR);
+        isIntaking = true;
+    }
+
+    public void doPeriodic() {
+        SmartDashboard.putNumber("ColorSensorDistance", colorSensorV3.getProximity() );
+        SmartDashboard.putBoolean("ColorSensorHasNote", isColorSensorHasNote() );
+
+        // This runs when the shooter isn't ingesting or shooting, and when the automatic modes are enabled
+        if( RobotContainer.getInstance().ingestingOperationMode.getSelected() == OperationMode.AUTOMATIC &&
+            (RobotContainer.getInstance().shooterAngleOperationMode.getSelected() == OperationMode.AUTOMATIC_WITH_APRILTAG || RobotContainer.getInstance().shooterAngleOperationMode.getSelected() == OperationMode.AUTOMATIC ) &&
+             SmartDashboard.getBoolean("Auto Reposition Note", true))
+        {
+            /*
+             * If the shooter angle is in the amplifier position AND there is a note, then jog the feeder motors forward to center the note.
+             * If the shooter angle is in the speaker position AND there is no note , then jog the feeder motors reverse until there is a note
+            */
+            if( isNotePresent() && shooterAngle.getCurrentAngle() == ANGLE.AMPLIFIER && isColorSensorHasNote() )
+            {
+                SmartDashboard.putString("Auto Reposition Note Status", "Moving note forward");
+                moveNoteForward();
+            }
+            else if( isNotePresent() && (shooterAngle.getCurrentAngle() == ANGLE.SPEAKER || shooterAngle.getCurrentAngle() == ANGLE.SOURCE)  && !isColorSensorHasNote() )
+            {
+                SmartDashboard.putString("Auto Reposition Note Status", "Moving note rearward");
+                moveNoteRearward();
+            }
+            else
+            {
+                SmartDashboard.putString("Auto Reposition Note Status", "No Task");
+                SmartDashboard.putString("ShooterFeederStatus", "Idle");
+                feedMotor1.set(0);
+                feedMotor2.set(0);
+            }            
+        } 
+        else 
+        {
+            SmartDashboard.putString("Auto Reposition Note Status", "Not Running");
+        }
+
     }
 
     public boolean isShooting() {
         return isShooting;
     }
 
-    public void test() {
-    Color detectedColor = colorSensorV3.getColor();
-    ColorMatchResult result = colorMatch.matchClosestColor(detectedColor);
-    //System.out.println((result.color == ORANGE) + " - " + result.confidence);
-    //System.out.println(colorSensorV3.getProximity());
-   // System.out.println(detectedColor.red + ", " + detectedColor.green + "," + detectedColor.blue);
+    public boolean isIntaking() {
+        return isIntaking;
+    }
+    public boolean isColorSensorHasNote()
+    {
+        return colorSensorV3.getProximity() > Constants.NOTE_PRESENT_DISTANCE;
     }
 
-    public boolean isNoteLoaded()
+    public void setIsNotePresent(boolean seen) 
     {
-        Color detectedColor = colorSensorV3.getColor();
-        ColorMatchResult result = colorMatch.matchClosestColor(detectedColor);
-        return result.color == ORANGE;
+        this.noteSeen = seen;
+    }
+
+    public boolean isNotePresent()
+    {
+        return this.noteSeen;
     }
 }
 

@@ -1,12 +1,15 @@
-package frc.robot.commands;
+package frc.robot.commands.autonomous;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
+import frc.robot.Robot;
 import frc.robot.subsystems.Drivetrain;
 
-public class AutonomousDriveForward extends Command {
+public class AutonomousDriveToTarget extends Command {
     long startTime;
     private final Drivetrain driveTrain;
     
-    public AutonomousDriveForward (Drivetrain drivetrain){
+    public AutonomousDriveToTarget (Drivetrain drivetrain){
 
         this.driveTrain = drivetrain;
         startTime = System.currentTimeMillis();
@@ -16,8 +19,14 @@ public class AutonomousDriveForward extends Command {
     @Override
     public void execute()
     {
-        driveTrain.drive(-0.6, 0.0);
-
+        if( DriverStation.getAlliance().get() == Alliance.Blue )
+        {
+            driveTrain.driveToTarget(7);
+        }
+        else
+        {
+            driveTrain.driveToTarget(4);
+        }
     }
 
     @Override
@@ -35,7 +44,7 @@ public class AutonomousDriveForward extends Command {
     @Override
     public boolean isFinished()
     {
-        return System.currentTimeMillis() - startTime > 3000;
+      return System.currentTimeMillis() - startTime > 10000 || driveTrain.isAtTarget(1);
     }
 
 

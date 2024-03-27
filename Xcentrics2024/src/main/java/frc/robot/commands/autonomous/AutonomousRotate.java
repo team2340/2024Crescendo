@@ -1,12 +1,12 @@
-package frc.robot.commands;
+package frc.robot.commands.autonomous;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.Drivetrain;
 
-public class AutonomousDriveToTarget extends Command {
+public class AutonomousRotate extends Command {
     long startTime;
     private final Drivetrain driveTrain;
     
-    public AutonomousDriveToTarget (Drivetrain drivetrain){
+    public AutonomousRotate (Drivetrain drivetrain){
 
         this.driveTrain = drivetrain;
         startTime = System.currentTimeMillis();
@@ -16,7 +16,7 @@ public class AutonomousDriveToTarget extends Command {
     @Override
     public void execute()
     {
-        driveTrain.driveToTarget(1);
+        driveTrain.drive(0.0, 0.55);
 
     }
 
@@ -35,7 +35,7 @@ public class AutonomousDriveToTarget extends Command {
     @Override
     public boolean isFinished()
     {
-      return System.currentTimeMillis() - startTime > 10000 || driveTrain.isAtTarget(1);
+      return System.currentTimeMillis() - startTime > 10000 || driveTrain.hasTarget(1);
     }
 
 
